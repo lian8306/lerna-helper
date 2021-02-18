@@ -1,0 +1,27 @@
+{
+  "name": "lerna-helper",
+  "version": "1.0.0",
+  "description": "some lerna cli",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lian8306/lerna-helper.git"
+  },
+  "bin": {
+    "lerna-helper": "./bin/lerna-helper.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lian8306/lerna-helper/issues"
+  },
+  "homepage": "https://github.com/lian8306/lerna-helper#readme",
+  "dependencies": {
+    "glob": "^7.1.6",
+    "npmlog": "^4.1.2",
+    "yargs": "^16.2.0"
+  }
+}
