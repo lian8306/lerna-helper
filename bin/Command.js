@@ -5,8 +5,48 @@ const glob = require('glob');
 const ChildProcess = require('child_process');
 
 function publishBuilder(args) {
-    // console.log("args", args);
-
+    // // if add new version
+    // let newVersion = args.n;
+    // // if update old version
+    // let updateVersion = args.u;
+    // // new version reg
+    // let betaSymbol = args.beta;
+    // // 'major', 'minor', 'patch'
+    // let changeLevel = args.level || 'patch';
+    // // default maximun pakges number is 30
+    // let maxNum = args['max-num'] || 30;
+    const opts = {
+        n: {
+            describe: "add a new version to package.json",
+            alias: "new",
+            type: "boolean",
+        },
+        // preid is copied from ../version/command because a whitelist for one option isn't worth it
+        u: {
+            describe: "update a old version to package.json",
+            type: "boolean",
+            alias: "update",
+            // requiresArg: true,
+            // defaultDescription: "alpha",
+        },
+        level: {
+            describe: "when add a new version with beta,option value is 'major', 'minor', 'patch'",
+            type: "string",
+            // requiresArg: true,
+            defaultDescription: "patch",
+        },
+        "beta": {
+            describe: "when add a new version with beta,set the beta value",
+            type: "string",
+            // requiresArg: false,
+        },
+        "max-num": {
+            describe: "Maximum number of files processed",
+            type: "number",
+            // requiresArg: false,
+        }
+    }
+    args.options(opts);
 }
 // Get all packages to be published
 function getAllPackages(packages, testPath) {
@@ -50,7 +90,6 @@ function changeVersion(version, changeLevel) {
 }
 
 function publishHandler(args) {
-    console.log("args", args);
     // all arguments without --
     let packages = args.files;
     // if add new version
@@ -63,7 +102,7 @@ function publishHandler(args) {
     let changeLevel = args.level || 'patch';
     // default maximun pakges number is 30
     let maxNum = args['max-num'] || 30;
-    
+
     if (!packages) {
         log.info('lerna-helper', 'packages can not be empty');
     }
@@ -73,7 +112,6 @@ function publishHandler(args) {
     if (publishPackages.length > maxNum) {
         log.info('lerna-helper', 'The maximun number of packets that can be processed is : j% ', maxNum);
     }
-
     // start to publish
     publishPackages.forEach(package => {
         // 修改路径
@@ -92,17 +130,20 @@ function publishHandler(args) {
 
                 let packagesJson = JSON.parse(packagesText);
                 let version = packagesJson.version || '1.0.0';
-                console.log('version is :', version);
                 let name = packagesJson.name;
+
                 if (updateVersion) {
                     // umpublish package
-                    ChildProcess.exec('"npm unpublish" name', {
+                    ChildProcess.exec(`npm unpublish ${name}@${version} --force`, {
                         cwd: package
                     }, (error, stdout, stderr) => {
                         if (error == null) {
-                            log.info('lerna-helper', `unpublish ${name} is success`);
+                            log.info('lerna-helper', `${name} current version is ${version}`)
+                            log.info('lerna-helper', `unpublish ${name}@${version} is success`);
                             // publish 
-                            publish(name);
+                            publish(name, package);
+                        } else {
+                            log.info(error)
                         }
                     })
                 } else {
@@ -113,7 +154,7 @@ function publishHandler(args) {
                         // has beta
                         if (v[1]) {
                             let newBetaVersion = v[1].replace(betaSymbol, '');
-                            newV = `${v[0]}-${newBetaVersion+1}`;
+                            newV = `${v[0]}-${betaSymbol}${Number(newBetaVersion)+1}`;
                         } else {
                             newV = `${v[0]}-${betaSymbol}1`;
                         }
@@ -143,7 +184,6 @@ function publishHandler(args) {
 }
 
 function Command(args) {
-    console.log('in command')
     return yargs(args).command('publish [files...]', 'publish target npm package', publishBuilder, publishHandler).argv;
 }
 
